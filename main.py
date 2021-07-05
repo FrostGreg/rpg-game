@@ -6,7 +6,7 @@ from classes.inventory import Item
 from time import sleep
 
 
-# region "temp"
+# region "Interface class"
 class Interface:
     def __init__(self, game_obj):
         self.game_obj = game_obj
@@ -374,14 +374,14 @@ elif mode == 2:
     # region "canvas + buttons"
     canvas = tk.Canvas(root, width=800, height=350, bg="red")
     canvas.grid(column=0, row=0, columnspan=2)
-
-    background = tk.PhotoImage(file="assets/back.png")
-    sprite_pic = tk.PhotoImage(file="assets/player.png")
-    boss_pic = tk.PhotoImage(file="assets/orc.png")
-    fire_pic = tk.PhotoImage(file="assets/fire.png")
-    lightning_pic = tk.PhotoImage(file="assets/lightning2.png")
-    win_pic = tk.PhotoImage(file="assets/WIN.png")
-    lose_pic = tk.PhotoImage(file="assets/LOSE.png")
+    dir = "docs/assets/"
+    background = tk.PhotoImage(file=dir+"back.png")
+    sprite_pic = tk.PhotoImage(file=dir+"player.png")
+    boss_pic = tk.PhotoImage(file=dir+"orc.png")
+    fire_pic = tk.PhotoImage(file=dir+"fire.png")
+    lightning_pic = tk.PhotoImage(file=dir+"lightning2.png")
+    win_pic = tk.PhotoImage(file=dir+"WIN.png")
+    lose_pic = tk.PhotoImage(file=dir+"LOSE.png")
     canvas.create_image(2, 0, image=background, anchor=tk.NW)
 
     boss = canvas.create_image(600, 100, image=boss_pic, anchor=tk.NW)
