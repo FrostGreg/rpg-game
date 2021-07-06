@@ -1,12 +1,15 @@
 # Simple RPG Game
 
+## Overview
+
+A little rpg style turn-based fighting game with both GUI and UI options
+
 ## Other Docs
 
 [Program Documentation](docs/documentation.md)
 
----
 
-A little rpg style turn-based fighting game with both GUI and UI options
+
 
 ---
 ## Screenshots:
