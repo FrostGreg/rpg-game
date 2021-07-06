@@ -1,14 +1,16 @@
 # Documentation
 
 W.I.P
+# Links to other Docs.
+[Requirements and Specifications](documentations/req-spec.md)
 
 This should've been done before development but I didn't know better years ago 
 
-Program Flow:
+## Program Flow:
 
 ![Image of program Flow](documentation/current-flow.PNG)
 
 
-Class Diagram:
+## Class Diagram:
 
 ![Image of relationship between classes](documentation/class-diagram.PNG)
