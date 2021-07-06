@@ -2,7 +2,7 @@
 
 W.I.P
 # Links to other Docs.
-[Requirements and Specifications](documentations/req-spec.md)
+[Requirements and Specifications](documentation/req-spec.md)
 
 This should've been done before development but I didn't know better years ago 
 
