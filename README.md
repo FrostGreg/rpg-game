@@ -6,7 +6,7 @@
 
 ---
 
-A little rpg game with both GUI and UI options
+A little rpg style turn-based fighting game with both GUI and UI options
 
 ---
 ## Screenshots:
