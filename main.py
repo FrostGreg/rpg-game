@@ -175,10 +175,10 @@ class Interface:
     def enemy_attack_anim(self):
         if not self.animation_progress:
             sleep(1)
-            canvas.move(boss, -400, 0)
+            canvas.move(boss, -450, 0)
             canvas.update()
             sleep(0.3)
-            canvas.move(boss, 400, 0)
+            canvas.move(boss, 450, 0)
             canvas.update()
         else:
             pass
@@ -436,5 +436,3 @@ elif mode_select == 2:
     # endregion
 
     root.mainloop()
-
-
