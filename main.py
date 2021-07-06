@@ -257,9 +257,24 @@ class Setup:
 
 
 game = Setup()
-mode = int(input("Select a mode in which you would like to play?:\n1: Text-based\n2: Graphical\n"))
+valid = False
+game_modes = [1, 2]
+mode_select = 0
 
-if mode == 1:
+while not valid:
+    try:
+        # int() already strips whitespace
+        mode_select = int(input("Select a mode in which you would like to play?:\n1: Text-based\n2: Graphical\n"))
+    except ValueError as e:
+        print("Invalid input Try Again")
+        continue
+
+    if mode_select in game_modes:
+        valid = True
+    else:
+        print("Invalid game mode Try Again")
+
+if mode_select == 1:
     running = True
 
     print(Bcolours.FAIL + Bcolours.BOLD + 'AN ENEMY ATTACKS!' + Bcolours.ENDC)
@@ -268,7 +283,10 @@ if mode == 1:
         print("=================================")
         game.player.choose_action()
         choice = input("Choose action: ")
-        index = int(choice) - 1
+        try:
+            index = int(choice) - 1
+        except ValueError as e:
+            continue
 
         print("You chose", game.player.get_action_name(index))
 
@@ -277,7 +295,10 @@ if mode == 1:
             game.enemy.take_damage(dmg)
         elif index == 1:
             game.player.choose_magic_spell()
-            magic_choice = int(input("Choose spell: ")) - 1
+            try:
+                magic_choice = int(input("Choose spell: ")) - 1
+            except ValueError as e:
+                continue
 
             if magic_choice == -1:
                 continue
@@ -302,7 +323,10 @@ if mode == 1:
 
         elif index == 2:
             game.player.choose_item()
-            item_choice = int(input("Choose Item: ")) - 1
+            try:
+                item_choice = int(input("Choose Item: ")) - 1
+            except ValueError as e:
+                continue
 
             if item_choice == -1:
                 continue
@@ -348,7 +372,7 @@ if mode == 1:
             running = False
 
 
-elif mode == 2:
+elif mode_select == 2:
     root = tk.Tk()
     root.geometry("805x650")
     root.title("Dungeon Quest")
