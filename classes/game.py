@@ -1,94 +1,135 @@
-import random
 from .magic import Spell
+from .colours import Colours
+from .inventory import Item
+from .person import Person
 
 
-class Bcolours:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    BROWN = "\033[0;33m"
-    YELLOW = "\033[1;33m"
-    PURPLE = "\033[0;35m"
-    LIGHT_CYAN = "\033[1;36m"
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+class Game:
+    def __init__(self):
+        # Create Black spells
+        self.fire = Spell("Fire", 10, 50, "black", Colours.FAIL)
+        self.ice = Spell("Ice", 15, 70, "black", Colours.OKBLUE)
+        self.quake = Spell("Quake", 8, 30, "black", Colours.BROWN)
+        self.lightning = Spell("Lightning", 25, 125, "black", Colours.PURPLE)
 
+        # Create White spells
+        self.heal = Spell("Heal", 10, 50, "white", Colours.YELLOW)
+        self.mega = Spell("Mega Heal", 20, 100, "white", Colours.LIGHT_CYAN)
 
-class Person:
-    def __init__(self, hp, mp, atk, df, magic, items):
-        self.maxhp = hp
-        self.hp = hp
-        self.maxmp = mp
-        self.mp = mp
-        self.atkh = atk + 10
-        self.atkl = atk - 10
-        self.df = df
-        self.magic = magic
-        self.items = items
-        self.action = ["Attack", "Magic", "Items"]
+        # Create Items
+        self.potion = Item("Potion", "potion", "Heals 50 HP", 50)
+        self.hipotion = Item("Hi-Potion", "potion", "Heals 100 HP", 100)
+        self.elixir = Item("elixir", "elixir", "Fully restores MP", 9999)
+        self.splashelixir = Item("Splash elixir", "elixir", "Fully restores MP for all party members", 9999)
 
-    def generate_damage(self):
-        return random.randrange(self.atkl, self.atkh)
+        self.bomb = Item("Bomb", "attack", "Deals 250 damage to all enemies", 250)
 
-    def take_damage(self, dmg):
-        self.hp -= dmg
-        if self.hp < 0:
-            self.hp = 0
-        return self.hp
+        self.player_spells = [self.fire, self.ice, self.quake, self.lightning, self.heal, self.mega]
+        self.player_items = [{"item": self.potion, "quantity": 5},
+                             {"item": self.hipotion, "quantity": 1},
+                             {"item": self.elixir, "quantity": 3},
+                             {"item": self.splashelixir, "quantity": 1},
+                             {"item": self.bomb, "quantity": 3}]
 
-    def heal(self, dmg):
-        self.hp += dmg
-        if self.hp > self.maxhp:
-            self.hp = self.maxhp
-        return self.hp
+        # Initiate Player and enemy
+        self.player = Person(100, 100, 25, 50, self.player_spells, self.player_items)
+        self.enemy = Person(250, 20, 33, 0, [self.fire, self.quake, self.heal], [])
+        self.running = True
+        self.dir = "docs/assets/"
 
-    def get_hp(self):
-        return self.hp
+    def run(self):
+        running = True
 
-    def get_maxhp(self):
-        return self.maxhp
+        print(Colours.FAIL + Colours.BOLD + 'AN ENEMY ATTACKS!' + Colours.ENDC)
 
-    def get_mp(self):
-        return self.mp
+        while running:
+            print("=================================")
+            self.player.choose_action()
+            choice = input("Choose action: ")
+            try:
+                index = int(choice) - 1
+            except ValueError:
+                continue
 
-    def get_maxmp(self):
-        return self.maxmp
+            print("You chose", self.player.get_action_name(index))
 
-    def reduce_mp(self, cost):
-        self.mp -= cost
+            if index == 0:
+                dmg = self.player.generate_damage()
+                self.enemy.take_damage(dmg)
+            elif index == 1:
+                self.player.choose_magic_spell()
+                try:
+                    magic_choice = int(input("Choose spell: ")) - 1
+                except ValueError:
+                    continue
 
-    def get_action_name(self, i):
-        return self.action[i]
+                if magic_choice == -1:
+                    continue
 
-    def choose_action(self):
-        i = 1
-        print(Bcolours.BOLD + Bcolours.HEADER + "ACTIONS" + Bcolours.ENDC)
-        print("---------------------")
-        for item in self.action:
-            print("    " + str(i) + ": " + item)
-            i += 1
+                magic_dmg = self.player.magic[magic_choice].generate_spell_damage()
+                spell = self.player.magic[magic_choice]
 
-    def choose_magic_spell(self):
-        i = 1
-        print("---------------------------------")
-        print(Bcolours.BOLD + Bcolours.HEADER + "SPELLS" + Bcolours.ENDC)
-        print("---------------------------------")
-        print("    0: Back to menu")
-        for spell in self.magic:
-            print("    " + str(i) + ": " + spell.colour + spell.name + Bcolours.ENDC,
-                  "(cost : " + str(spell.cost) + ")")
-            i += 1
+                current_mp = self.player.get_mp()
 
-    def choose_item(self):
-        i = 1
-        print("---------------------------------")
-        print(Bcolours.BOLD + Bcolours.HEADER + "ITEMS" + Bcolours.ENDC)
-        print("---------------------------------")
-        print("    0: Back to menu")
-        for item in self.items:
-            print("    " + str(i) + ": " + item["item"].name + "(" + item["item"].description + ")" + "[x" +
-                  str(item["quantity"]) + "]")
-            i += 1
+                if spell.cost > current_mp:
+                    print(Colours.FAIL + "Not enough MP" + Colours.ENDC)
+                    continue
+
+                self.player.reduce_mp(spell.cost)
+
+                if spell.form == "black":
+                    self.enemy.take_damage(magic_dmg)
+                    print(spell.colour + "\n" + spell.name + " deals",
+                          str(magic_dmg) + " points of damage" + Colours.ENDC)
+                elif spell.form == "white":
+                    self.player.heal(magic_dmg)
+                    print(spell.colour + "\n" + spell.name + " heals", str(magic_dmg) + " HP" + Colours.ENDC)
+
+            elif index == 2:
+                self.player.choose_item()
+                try:
+                    item_choice = int(input("Choose Item: ")) - 1
+                except ValueError:
+                    continue
+
+                if item_choice == -1:
+                    continue
+
+                item = self.player.items[item_choice]["item"]
+
+                if self.player.items[item_choice]["quantity"] == 0:
+                    print(Colours.FAIL + "DAMMIT I ran out" + Colours.ENDC)
+                    continue
+
+                self.player.items[item_choice]["quantity"] -= 1
+
+                if item.form == "potion":
+                    self.player.heal(item.prop)
+                    print(Colours.OKGREEN + "Player heals for " + str(item.prop) + " HP" + Colours.ENDC)
+
+                elif item.form == "elixir":
+                    self.player.mp = self.player.max_mp
+                    print(Colours.OKGREEN + "Fully restored player MP" + Colours.ENDC)
+
+                elif item.form == "attack":
+                    self.enemy.take_damage(item.prop)
+                    print(item.name, "deals " + str(item.prop) + " points of damage")
+
+            enemy_dmg = self.enemy.generate_damage()
+            self.player.take_damage(enemy_dmg)
+            print("Enemy attacks for:", enemy_dmg)
+            print("--------------------")
+
+            print("Enemy Health: " + Colours.FAIL + str(self.enemy.get_hp()) + "/"
+                  + str(self.enemy.get_max_hp()) + Colours.ENDC)
+            print("Your Health: " + Colours.OKGREEN + str(self.player.get_hp()) + "/"
+                  + str(self.player.get_max_hp()) + Colours.ENDC)
+            print("Your MP" + Colours.OKBLUE + str(self.player.get_mp()) + "/"
+                  + str(self.player.get_max_mp()) + Colours.ENDC)
+
+            if self.enemy.get_hp() == 0:
+                print(Colours.BOLD + Colours.OKGREEN + "CONGRATS You defeated the enemy :)" + Colours.ENDC)
+                running = False
+            elif self.player.get_hp() == 0:
+                print(Colours.BOLD + Colours.FAIL + "YOU DIED!" + Colours.ENDC)
+                running = False
