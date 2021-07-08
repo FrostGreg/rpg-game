@@ -2,12 +2,13 @@ import random
 
 
 class Spell:
-    def __init__(self, name, cost, dmg, type, colour):
+    def __init__(self, name, cost, dmg, form, colour, graphic=None):
         self.name = name
         self.cost = cost
         self.dmg = dmg
-        self.type = type
+        self.form = form
         self.colour = colour
+        self.graphic = graphic
 
     def generate_spell_damage(self):
         high = self.dmg + 15
