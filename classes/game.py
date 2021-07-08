@@ -7,10 +7,10 @@ from .person import Person
 class Game:
     def __init__(self):
         # Create Black spells
-        self.fire = Spell("Fire", 10, 50, "black", Colours.FAIL)
+        self.fire = Spell("Fire", 10, 50, "black", Colours.FAIL, "fire.png")
         self.ice = Spell("Ice", 15, 70, "black", Colours.OKBLUE)
         self.quake = Spell("Quake", 8, 30, "black", Colours.BROWN)
-        self.lightning = Spell("Lightning", 25, 125, "black", Colours.PURPLE)
+        self.lightning = Spell("Lightning", 25, 125, "black", Colours.PURPLE, "lightning.png")
 
         # Create White spells
         self.heal = Spell("Heal", 10, 50, "white", Colours.YELLOW)
@@ -32,8 +32,9 @@ class Game:
                              {"item": self.bomb, "quantity": 3}]
 
         # Initiate Player and enemy
-        self.player = Person(100, 100, 25, 50, self.player_spells, self.player_items)
-        self.enemy = Person(250, 20, 33, 0, [self.fire, self.quake, self.heal], [])
+        self.player = Person(100, 100, 25, 50, self.player_spells, self.player_items, "player.png")
+        self.enemy = Person(250, 20, 33, 0, [self.fire, self.quake, self.heal], [], "orc.png")
+        self.entities = [self.player, self.enemy]
         self.running = True
         self.dir = "docs/assets/"
 

@@ -33,12 +33,17 @@ class Interface:
         self.win_pic = tk.PhotoImage(file=self.game.dir + "WIN.png")
         self.lose_pic = tk.PhotoImage(file=self.game.dir + "LOSE.png")
         self.fire_pic = tk.PhotoImage(file=self.game.dir + "fire.png")
-        self.lightning_pic = tk.PhotoImage(file=self.game.dir + "lightning2.png")
+        self.lightning_pic = tk.PhotoImage(file=self.game.dir + "lightning.png")
 
         self.background = tk.PhotoImage(file=self.game.dir + "back.png")
         self.sprite_pic = tk.PhotoImage(file=self.game.dir + "player.png")
         self.boss_pic = tk.PhotoImage(file=self.game.dir + "orc.png")
         self.sprite = self.boss = None
+
+        self.entity_hp_lbls = {game.player: self.health_lbl, game.enemy: self.enemy_health_lbl}
+        self.entity_mp_lbls = {game.player: self.mp_lbl}
+        self.entity_hp_bars = {game.player: self.health, game.enemy: self.enemy_health}
+        self.entity_mp_bars = {game.player: self.magic_points}
 
         self.btn_tl = ttk.Button(self.root, style="TButton", text="Melee", command=lambda: self.get_choice(1))
         self.btn_tl.grid(column=0, row=5)
@@ -100,7 +105,7 @@ class Interface:
             dmg = self.game.player.generate_damage()
             self.game.enemy.take_damage(dmg)
             self.player_attack_anim()
-            self.update_health(self.game.enemy)
+            self.update_stats()
             self.check_health(self.game.enemy)
             self.enemy_attack()
         elif self.player_choice == 2:
@@ -120,13 +125,11 @@ class Interface:
         else:
             magic_dmg = self.game.player.magic[self.player_choice - 2].generate_spell_damage()
             spell_cost = self.game.player.magic[self.player_choice - 2].cost
-            name = self.game.player.magic[self.player_choice - 2].name
-            self.magic_animation(name)
+            self.magic_animation(self.game.player.magic[self.player_choice - 2])
 
         self.game.player.reduce_mp(spell_cost)
-        self.update_mp()
         self.game.enemy.take_damage(magic_dmg)
-        self.update_health(self.game.enemy)
+        self.update_stats()
 
         self.check_health(self.game.enemy)
         self.enemy_attack()
@@ -147,7 +150,7 @@ class Interface:
                     print(self.game.player.get_mp())
                 elif item.form == "attack":
                     self.game.enemy.take_damage(dmg)
-                    self.update_health(self.game.enemy)
+                    self.update_stats()
                     self.check_health(self.game.enemy)
 
                 self.game.player.items[self.player_choice - 2]["quantity"] -= 1
@@ -161,29 +164,27 @@ class Interface:
             enemy_dmg = self.game.enemy.generate_damage()
             self.enemy_attack_anim()
             self.game.player.take_damage(enemy_dmg)
-            self.update_health(self.game.player)
+            self.update_stats()
             self.check_health(self.game.player)
         else:
             pass
 
-    def update_health(self, character):
-        hp = character.get_hp()
-        max_hp = character.get_max_hp()
-        if character == self.game.player:
-            self.health['value'] = hp
-            self.health_lbl.configure(text="Player HP:" + str(hp) + "/" + str(max_hp))
-            self.health.update()
-        else:
-            self.enemy_health['value'] = hp / 2.5  # this makes the enemy hp(250) equal to 100% of the progress bar
-            self.enemy_health_lbl.configure(text="Enemy HP:" + str(hp) + "/" + str(max_hp))
-            self.enemy_health.update()
+    def update_stats(self):
+        for player in self.game.entities:
+            hp = player.get_hp()
+            max_hp = player.get_max_hp()
+            mp = player.get_mp()
+            max_mp = player.get_max_mp()
 
-    def update_mp(self):
-        mp = self.game.player.get_mp()
-        max_mp = self.game.player.get_max_mp()
+            if player in self.entity_hp_lbls:
+                self.entity_hp_lbls[player].configure(text="Player HP:" + str(hp) + "/" + str(max_hp))
+                self.entity_hp_bars[player]['value'] = hp / (max_hp / 100)
+                self.entity_hp_bars[player].update()
 
-        self.magic_points['value'] = mp
-        self.mp_lbl.configure(text="Player MP:" + str(mp) + "/" + str(max_mp))
+            if player in self.entity_mp_lbls:
+                self.entity_mp_lbls[player].configure(text="MP:" + str(mp) + "/" + str(max_mp))
+                self.entity_mp_bars[player]['value'] = mp / (max_mp / 100)
+                self.entity_mp_bars[player].update()
 
     def player_attack_anim(self):
         if not self.animation_progress:
@@ -221,33 +222,26 @@ class Interface:
                 self.running = False
                 self.canvas.delete(self.sprite)
 
-    def magic_animation(self, name):
-        x1 = 225
-        x2 = 675
-        spell = self.canvas.create_rectangle(x1, 215, x1 + 15, 235, fill="red")
-        if name == "Fire":
-            spell = self.canvas.create_image(x1, 215, image=self.fire_pic, anchor=tk.NW)
-        elif name == "Ice":
-            # insert ice picture
-            pass
-        elif name == "Lightning":
-            spell = self.canvas.create_image(x1, 215, image=self.lightning_pic, anchor=tk.NW)
-        elif name == "Quake":
-            # insert quake animation
-            pass
-        self.canvas.update()
-        sleep(0.1)
-        while x1 <= x2:
-            if x1 == x2:
-                self.canvas.delete(spell)
-            else:
-                self.canvas.move(spell, 30, 0)
-                self.canvas.update()
-                sleep(0.05)
-            x1 += 30
+    def magic_animation(self, spell):
+        start = 225
+        end = 675
+        speed = 30
+
+        pic = spell.get_graphic()
+        img = tk.PhotoImage(file=self.game.dir + "anim_default.png")
+        if pic:
+            img = tk.PhotoImage(file=self.game.dir + pic)
+
+        animation = self.canvas.create_image(start, 215, image=img, anchor=tk.NW)
+
+        while start <= end:
+            self.canvas.update()
+            self.canvas.move(animation, speed, 0)
+            sleep(0.05)
+            start += speed
+        self.canvas.delete(animation)
 
     def run(self):
-
         self.root.geometry("805x650")
         self.root.title("Dungeon Quest")
         self.root.configure(bg="darkgrey")
@@ -268,28 +262,22 @@ class Interface:
                        foreground=[('active', 'white')],
                        background=[('active', "#021A44")])
 
-        # region "canvas + buttons"
-
         self.canvas.grid(column=0, row=0, columnspan=2)
 
         self.canvas.create_image(2, 0, image=self.background, anchor=tk.NW)
-
         self.sprite = self.canvas.create_image(100, 175, image=self.sprite_pic, anchor=tk.NW)
         self.boss = self.canvas.create_image(600, 100, image=self.boss_pic, anchor=tk.NW)
 
         self.health['value'] = 100
         self.health.grid(column=0, row=2, sticky=tk.W)
-
         self.health_lbl.grid(column=0, row=1, sticky=tk.W)
 
         self.magic_points['value'] = 100
         self.magic_points.grid(column=0, row=4, sticky=tk.W)
-
         self.mp_lbl.grid(column=0, row=3, sticky=tk.W)
 
         self.enemy_health['value'] = 250
         self.enemy_health.grid(column=1, row=2, sticky=tk.E)
-
         self.enemy_health_lbl.grid(column=1, row=1, sticky=tk.E)
 
         self.root.mainloop()

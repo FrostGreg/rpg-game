@@ -46,6 +46,9 @@ class Person:
     def reduce_mp(self, cost):
         self.mp -= cost
 
+    def get_graphic(self):
+        return self.graphic
+
     def get_action_name(self, i):
         return self.action[i]
 

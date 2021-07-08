@@ -10,6 +10,9 @@ class Spell:
         self.colour = colour
         self.graphic = graphic
 
+    def get_graphic(self):
+        return self.graphic
+
     def generate_spell_damage(self):
         high = self.dmg + 15
         low = self.dmg - 15
