@@ -45,50 +45,25 @@ class Interface:
         self.entity_mp_bars = {game.player: self.magic_points}
         self.entity_graphics = {game.player: self.sprite, game.enemy: self.boss}
 
-        self.btn_tl = ttk.Button(self.root, style="TButton", text="Melee", command=lambda: self.get_choice(1))
-        self.btn_tl.grid(column=0, row=5)
+        self.menu = ["Melee", "Magic", "Items", "", "", ""]
+        self.buttons = []
 
-        self.btn_tr = ttk.Button(self.root, style="TButton", text="Magic", command=lambda: self.get_choice(2))
-        self.btn_tr.grid(column=1, row=5)
+        for i in range(6):
+            self.buttons.append(
+                ttk.Button(self.root, style="TButton", text=self.menu[i]))
+            self.buttons[i].grid(column=i % 2, row=5 + (i // 2))
 
-        self.btn_l = ttk.Button(self.root, style="TButton", text="Items", command=lambda: self.get_choice(3))
-        self.btn_l.grid(column=0, row=6)
+        self.buttons[0].configure(command=lambda: self.get_choice(1))
+        self.buttons[1].configure(command=lambda: self.get_choice(2))
+        self.buttons[2].configure(command=lambda: self.get_choice(3))
+        self.buttons[3].configure(command=lambda: self.get_choice(4))
+        self.buttons[4].configure(command=lambda: self.get_choice(5))
+        self.buttons[5].configure(command=lambda: self.get_choice(6))
 
-        self.btn_r = ttk.Button(self.root, style="TButton", command=lambda: self.get_choice(4))
-        self.btn_r.grid(column=1, row=6)
-
-        self.btn_bl = ttk.Button(self.root, style="TButton", command=lambda: self.get_choice(5))
-        self.btn_bl.grid(column=0, row=7)
-
-        self.btn_br = ttk.Button(self.root, style="TButton", command=lambda: self.get_choice(6))
-        self.btn_br.grid(column=1, row=7)
-
-    def display_menu(self):
-        self.menu_level = 0
-        self.btn_tl.configure(text="Melee")
-        self.btn_tr.configure(text="Magic")
-        self.btn_l.configure(text="Items")
-        self.btn_r.configure(text="")
-        self.btn_bl.configure(text="")
-        self.btn_br.configure(text="")
-
-    def display_magic(self):
-        self.menu_level = 1
-        self.btn_tl.configure(text="Go back")
-        self.btn_tr.configure(text="Fire")
-        self.btn_l.configure(text="Ice")
-        self.btn_r.configure(text="Quake")
-        self.btn_bl.configure(text="Lighting")
-        self.btn_br.configure(text="Heal")
-
-    def display_items(self):
-        self.menu_level = 2
-        self.btn_tl.configure(text="Go back")
-        self.btn_tr.configure(text="Potion (x" + str(self.game.player.items[0]["quantity"]) + ")")
-        self.btn_l.configure(text="Hi-Potion (x" + str(self.game.player.items[1]["quantity"]) + ")")
-        self.btn_r.configure(text="elixir (x" + str(self.game.player.items[2]["quantity"]) + ")")
-        self.btn_bl.configure(text="Splash elixir (x" + str(self.game.player.items[3]["quantity"]) + ")")
-        self.btn_br.configure(text="Bomb (x" + str(self.game.player.items[4]["quantity"]) + ")")
+    def update_btns(self, labels, menu_level):
+        self.menu_level = menu_level
+        for i in range(len(self.buttons)):
+            self.buttons[i].configure(text=labels[i])
 
     def get_choice(self, i):
         if self.running:
@@ -104,15 +79,19 @@ class Interface:
         if self.player_choice == 1:
             self.attack(self.game.player, self.game.enemy)
         elif self.player_choice == 2:
-            self.display_magic()
+            self.update_btns(["Go Back", "Fire", "Ice", "Quake", "Lightning", "Heal"], 1)
         elif self.player_choice == 3:
-            self.display_items()
+            self.update_btns(["Go Back", "Potion (x" + str(self.game.player.items[0]["quantity"]) + ")",
+                              "Hi-Potion (x" + str(self.game.player.items[1]["quantity"]) + ")",
+                              "elixir (x" + str(self.game.player.items[2]["quantity"]) + ")",
+                              "Splash elixir (x" + str(self.game.player.items[3]["quantity"]) + ")",
+                              "Bomb (x" + str(self.game.player.items[4]["quantity"]) + ")"], 2)
 
     def choose_magic(self):
         magic_dmg = 0
 
         if self.player_choice == 1:
-            self.display_menu()
+            self.update_btns(self.menu, 0)
             return
         elif self.player_choice == 6:
             self.game.player.heal(self.game.heal.dmg)
@@ -131,7 +110,7 @@ class Interface:
 
     def choose_item(self):
         if self.player_choice == 1:
-            self.display_menu()
+            self.update_btns(self.menu, 0)
             return
         else:
             item = self.game.player.items[self.player_choice - 2]["item"]
