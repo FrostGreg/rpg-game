@@ -163,22 +163,6 @@ class Interface:
                 self.entity_mp_bars[player]['value'] = mp / (max_mp / 100)
                 self.entity_mp_bars[player].update()
 
-    def melee_anim(self, character):
-        movement = 450
-        if character.get_team() == "evil":
-            movement = -450
-
-        graphic = self.entity_graphics[character]
-        if not self.animation_progress:
-            sleep(0.1)
-            self.animation_progress = True
-            self.canvas.move(graphic, movement, 0)
-            self.canvas.update()
-            sleep(0.3)
-            self.canvas.move(graphic, -movement, 0)
-            self.canvas.update()
-            self.animation_progress = False
-
     def check_health(self):
         for character in self.game.entities:
             hp = character.get_hp()
@@ -195,6 +179,22 @@ class Interface:
                 self.canvas.delete(dead)
                 self.canvas.update()
                 break
+
+    def melee_anim(self, character):
+        movement = 450
+        if character.get_team() == "evil":
+            movement = -450
+
+        graphic = self.entity_graphics[character]
+        if not self.animation_progress:
+            sleep(0.1)
+            self.animation_progress = True
+            self.canvas.move(graphic, movement, 0)
+            self.canvas.update()
+            sleep(0.3)
+            self.canvas.move(graphic, -movement, 0)
+            self.canvas.update()
+            self.animation_progress = False
 
     def magic_animation(self, spell):
         start = 225
