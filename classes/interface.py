@@ -81,11 +81,11 @@ class Interface:
         elif self.player_choice == 2:
             self.update_btns(["Go Back", "Fire", "Ice", "Quake", "Lightning", "Heal"], 1)
         elif self.player_choice == 3:
-            self.update_btns(["Go Back", "Potion (x" + str(self.game.player.items[0]["quantity"]) + ")",
-                              "Hi-Potion (x" + str(self.game.player.items[1]["quantity"]) + ")",
-                              "elixir (x" + str(self.game.player.items[2]["quantity"]) + ")",
-                              "Splash elixir (x" + str(self.game.player.items[3]["quantity"]) + ")",
-                              "Bomb (x" + str(self.game.player.items[4]["quantity"]) + ")"], 2)
+            self.update_btns(["Go Back", "Potion (x" + str(self.game.get_item_quantity(0)) + ")",
+                              "Hi-Potion (x" + str(self.game.get_item_quantity(1)) + ")",
+                              "elixir (x" + str(self.game.get_item_quantity(2)) + ")",
+                              "Splash elixir (x" + str(self.game.get_item_quantity(3)) + ")",
+                              "Bomb (x" + str(self.game.get_item_quantity(4)) + ")"], 2)
 
     def choose_magic(self):
         magic_dmg = 0
@@ -112,22 +112,22 @@ class Interface:
         if self.player_choice == 1:
             self.update_btns(self.menu, 0)
             return
-        else:
-            item = self.game.player.items[self.player_choice - 2]["item"]
-            if self.game.player.items[self.player_choice - 2]["quantity"] > 0:
-                dmg = item.prop
-                if item.form == "potion":
-                    self.game.player.heal(dmg)
-                    print(self.game.player.get_hp())
-                elif item.form == "elixir":
-                    self.game.player.mp += dmg
-                    print(self.game.player.get_mp())
-                elif item.form == "attack":
-                    self.game.enemy.take_damage(dmg)
-                    self.update_stats()
-                    self.check_health()
 
-                self.game.player.items[self.player_choice - 2]["quantity"] -= 1
+        item = self.game.player.items[self.player_choice - 2]["item"]
+        if self.game.player.items[self.player_choice - 2]["quantity"] > 0:
+            dmg = item.prop
+            if item.form == "potion":
+                self.game.player.heal(dmg)
+            elif item.form == "elixir":
+                self.game.player.mp += dmg
+            elif item.form == "attack":
+                self.game.enemy.take_damage(dmg)
+
+            self.update_stats()
+            self.check_health()
+            self.game.player.items[self.player_choice - 2]["quantity"] -= 1
+            self.buttons[self.player_choice - 1].configure(
+                text=item.name + "(x" + str(self.game.get_item_quantity(self.player_choice - 2)) + ")")
 
         self.attack(self.game.enemy, self.game.player)
 

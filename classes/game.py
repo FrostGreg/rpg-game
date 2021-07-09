@@ -38,6 +38,9 @@ class Game:
         self.running = True
         self.dir = "docs/assets/"
 
+    def get_item_quantity(self, item):
+        return self.player_items[item]["quantity"]
+
     def run(self):
         running = True
 
