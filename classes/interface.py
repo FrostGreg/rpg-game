@@ -102,12 +102,7 @@ class Interface:
 
     def choose_action(self):
         if self.player_choice == 1:
-            dmg = self.game.player.generate_damage()
-            self.game.enemy.take_damage(dmg)
-            self.melee_anim(self.game.player)
-            self.update_stats()
-            self.check_health()
-            self.enemy_attack()
+            self.attack(self.game.player, self.game.enemy)
         elif self.player_choice == 2:
             self.display_magic()
         elif self.player_choice == 3:
@@ -132,7 +127,7 @@ class Interface:
         self.update_stats()
 
         self.check_health()
-        self.enemy_attack()
+        self.attack(self.game.enemy, self.game.player)
 
     def choose_item(self):
         if self.player_choice == 1:
@@ -155,17 +150,22 @@ class Interface:
 
                 self.game.player.items[self.player_choice - 2]["quantity"] -= 1
 
-        self.enemy_attack()
+        self.attack(self.game.enemy, self.game.player)
 
-    def enemy_attack(self):
-        if self.game.enemy.get_hp() > 0:
-            enemy_dmg = self.game.enemy.generate_damage()
-            self.melee_anim(self.game.enemy)
-            self.game.player.take_damage(enemy_dmg)
+    def attack(self, src, target):
+        if src == target:
+            return
+
+        if src.get_hp() > 0:
+            dmg = src.generate_damage()
+            self.melee_anim(src)
+            target.take_damage(dmg)
             self.update_stats()
             self.check_health()
-        else:
-            pass
+
+            if src.get_team() == "good":
+                if target.get_hp() > 0:
+                    self.attack(target, src)
 
     def update_stats(self):
         for player in self.game.entities:
@@ -191,7 +191,7 @@ class Interface:
 
         graphic = self.entity_graphics[character]
         if not self.animation_progress:
-            sleep(0.5)
+            sleep(0.1)
             self.animation_progress = True
             self.canvas.move(graphic, movement, 0)
             self.canvas.update()
