@@ -32,8 +32,8 @@ class Game:
                              {"item": self.bomb, "quantity": 3}]
 
         # Initiate Player and enemy
-        self.player = Person(100, 100, 25, 50, self.player_spells, self.player_items, "player.png")
-        self.enemy = Person(250, 20, 33, 0, [self.fire, self.quake, self.heal], [], "orc.png")
+        self.player = Person(100, 100, 25, 50, self.player_spells, self.player_items, "good", "player.png")
+        self.enemy = Person(250, 20, 33, 0, [self.fire, self.quake, self.heal], [], "evil", "orc.png")
         self.entities = [self.player, self.enemy]
         self.running = True
         self.dir = "docs/assets/"

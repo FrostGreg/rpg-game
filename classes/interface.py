@@ -5,7 +5,6 @@ from time import sleep
 
 class Interface:
     def __init__(self, game):
-
         self.game = game
         self.player_choice = 0
         self.menu_level = 0
@@ -30,20 +29,21 @@ class Interface:
         self.magic_points = ttk.Progressbar(self.root, style="blue.Horizontal.TProgressbar",
                                             orient=tk.HORIZONTAL, length=100, mode="determinate")
 
-        self.win_pic = tk.PhotoImage(file=self.game.dir + "WIN.png")
-        self.lose_pic = tk.PhotoImage(file=self.game.dir + "LOSE.png")
-        self.fire_pic = tk.PhotoImage(file=self.game.dir + "fire.png")
-        self.lightning_pic = tk.PhotoImage(file=self.game.dir + "lightning.png")
-
         self.background = tk.PhotoImage(file=self.game.dir + "back.png")
         self.sprite_pic = tk.PhotoImage(file=self.game.dir + "player.png")
         self.boss_pic = tk.PhotoImage(file=self.game.dir + "orc.png")
-        self.sprite = self.boss = None
+        self.win_pic = tk.PhotoImage(file=self.game.dir + "WIN.png")
+        self.lose_pic = tk.PhotoImage(file=self.game.dir + "LOSE.png")
+
+        self.canvas.create_image(2, 0, image=self.background, anchor=tk.NW)
+        self.sprite = self.canvas.create_image(100, 175, image=self.sprite_pic, anchor=tk.NW)
+        self.boss = self.canvas.create_image(600, 100, image=self.boss_pic, anchor=tk.NW)
 
         self.entity_hp_lbls = {game.player: self.health_lbl, game.enemy: self.enemy_health_lbl}
         self.entity_mp_lbls = {game.player: self.mp_lbl}
         self.entity_hp_bars = {game.player: self.health, game.enemy: self.enemy_health}
         self.entity_mp_bars = {game.player: self.magic_points}
+        self.entity_graphics = {game.player: self.sprite, game.enemy: self.boss}
 
         self.btn_tl = ttk.Button(self.root, style="TButton", text="Melee", command=lambda: self.get_choice(1))
         self.btn_tl.grid(column=0, row=5)
@@ -104,9 +104,9 @@ class Interface:
         if self.player_choice == 1:
             dmg = self.game.player.generate_damage()
             self.game.enemy.take_damage(dmg)
-            self.player_attack_anim()
+            self.melee_anim(self.game.player)
             self.update_stats()
-            self.check_health(self.game.enemy)
+            self.check_health()
             self.enemy_attack()
         elif self.player_choice == 2:
             self.display_magic()
@@ -131,7 +131,7 @@ class Interface:
         self.game.enemy.take_damage(magic_dmg)
         self.update_stats()
 
-        self.check_health(self.game.enemy)
+        self.check_health()
         self.enemy_attack()
 
     def choose_item(self):
@@ -151,21 +151,19 @@ class Interface:
                 elif item.form == "attack":
                     self.game.enemy.take_damage(dmg)
                     self.update_stats()
-                    self.check_health(self.game.enemy)
+                    self.check_health()
 
                 self.game.player.items[self.player_choice - 2]["quantity"] -= 1
-            else:
-                pass
 
         self.enemy_attack()
 
     def enemy_attack(self):
         if self.game.enemy.get_hp() > 0:
             enemy_dmg = self.game.enemy.generate_damage()
-            self.enemy_attack_anim()
+            self.melee_anim(self.game.enemy)
             self.game.player.take_damage(enemy_dmg)
             self.update_stats()
-            self.check_health(self.game.player)
+            self.check_health()
         else:
             pass
 
@@ -186,41 +184,38 @@ class Interface:
                 self.entity_mp_bars[player]['value'] = mp / (max_mp / 100)
                 self.entity_mp_bars[player].update()
 
-    def player_attack_anim(self):
+    def melee_anim(self, character):
+        movement = 450
+        if character.get_team() == "evil":
+            movement = -450
+
+        graphic = self.entity_graphics[character]
         if not self.animation_progress:
+            sleep(0.5)
             self.animation_progress = True
-            self.canvas.move(self.sprite, 450, 0)
+            self.canvas.move(graphic, movement, 0)
             self.canvas.update()
             sleep(0.3)
-            self.canvas.move(self.sprite, -450, 0)
+            self.canvas.move(graphic, -movement, 0)
             self.canvas.update()
             self.animation_progress = False
-        else:
-            pass
 
-    def enemy_attack_anim(self):
-        if not self.animation_progress:
-            sleep(1)
-            self.canvas.move(self.boss, -450, 0)
-            self.canvas.update()
-            sleep(0.3)
-            self.canvas.move(self.boss, 450, 0)
-            self.canvas.update()
-        else:
-            pass
+    def check_health(self):
+        for character in self.game.entities:
+            hp = character.get_hp()
+            if hp <= 0:
+                if character.get_team() == "evil":
+                    img = self.win_pic
+                    dead = self.boss
+                else:
+                    img = self.lose_pic
+                    dead = self.sprite
 
-    def check_health(self, character):
-        hp = character.get_hp()
-        if character == self.game.enemy:
-            if hp == 0:
-                self.canvas.create_image(200, 100, image=self.win_pic, anchor=tk.NW)
                 self.running = False
-                self.canvas.delete(self.boss)
-        elif character == self.game.player:
-            if hp == 0:
-                self.canvas.create_image(200, 100, image=self.lose_pic, anchor=tk.NW)
-                self.running = False
-                self.canvas.delete(self.sprite)
+                self.canvas.create_image(200, 100, image=img, anchor=tk.NW)
+                self.canvas.delete(dead)
+                self.canvas.update()
+                break
 
     def magic_animation(self, spell):
         start = 225
@@ -263,10 +258,6 @@ class Interface:
                        background=[('active', "#021A44")])
 
         self.canvas.grid(column=0, row=0, columnspan=2)
-
-        self.canvas.create_image(2, 0, image=self.background, anchor=tk.NW)
-        self.sprite = self.canvas.create_image(100, 175, image=self.sprite_pic, anchor=tk.NW)
-        self.boss = self.canvas.create_image(600, 100, image=self.boss_pic, anchor=tk.NW)
 
         self.health['value'] = 100
         self.health.grid(column=0, row=2, sticky=tk.W)
