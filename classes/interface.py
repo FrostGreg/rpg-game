@@ -5,7 +5,6 @@ from time import sleep
 
 class Interface:
     def __init__(self, game):
-
         self.game = game
         self.player_choice = 0
         self.menu_level = 0
@@ -30,60 +29,41 @@ class Interface:
         self.magic_points = ttk.Progressbar(self.root, style="blue.Horizontal.TProgressbar",
                                             orient=tk.HORIZONTAL, length=100, mode="determinate")
 
-        self.win_pic = tk.PhotoImage(file=self.game.dir + "WIN.png")
-        self.lose_pic = tk.PhotoImage(file=self.game.dir + "LOSE.png")
-        self.fire_pic = tk.PhotoImage(file=self.game.dir + "fire.png")
-        self.lightning_pic = tk.PhotoImage(file=self.game.dir + "lightning2.png")
-
         self.background = tk.PhotoImage(file=self.game.dir + "back.png")
         self.sprite_pic = tk.PhotoImage(file=self.game.dir + "player.png")
         self.boss_pic = tk.PhotoImage(file=self.game.dir + "orc.png")
-        self.sprite = self.boss = None
+        self.win_pic = tk.PhotoImage(file=self.game.dir + "WIN.png")
+        self.lose_pic = tk.PhotoImage(file=self.game.dir + "LOSE.png")
 
-        self.btn_tl = ttk.Button(self.root, style="TButton", text="Melee", command=lambda: self.get_choice(1))
-        self.btn_tl.grid(column=0, row=5)
+        self.canvas.create_image(2, 0, image=self.background, anchor=tk.NW)
+        self.sprite = self.canvas.create_image(100, 175, image=self.sprite_pic, anchor=tk.NW)
+        self.boss = self.canvas.create_image(600, 100, image=self.boss_pic, anchor=tk.NW)
 
-        self.btn_tr = ttk.Button(self.root, style="TButton", text="Magic", command=lambda: self.get_choice(2))
-        self.btn_tr.grid(column=1, row=5)
+        self.entity_hp_lbls = {game.player: self.health_lbl, game.enemy: self.enemy_health_lbl}
+        self.entity_mp_lbls = {game.player: self.mp_lbl}
+        self.entity_hp_bars = {game.player: self.health, game.enemy: self.enemy_health}
+        self.entity_mp_bars = {game.player: self.magic_points}
+        self.entity_graphics = {game.player: self.sprite, game.enemy: self.boss}
 
-        self.btn_l = ttk.Button(self.root, style="TButton", text="Items", command=lambda: self.get_choice(3))
-        self.btn_l.grid(column=0, row=6)
+        self.menu = ["Melee", "Magic", "Items", "", "", ""]
+        self.buttons = []
 
-        self.btn_r = ttk.Button(self.root, style="TButton", command=lambda: self.get_choice(4))
-        self.btn_r.grid(column=1, row=6)
+        for i in range(6):
+            self.buttons.append(
+                ttk.Button(self.root, style="TButton", text=self.menu[i]))
+            self.buttons[i].grid(column=i % 2, row=5 + (i // 2))
 
-        self.btn_bl = ttk.Button(self.root, style="TButton", command=lambda: self.get_choice(5))
-        self.btn_bl.grid(column=0, row=7)
+        self.buttons[0].configure(command=lambda: self.get_choice(1))
+        self.buttons[1].configure(command=lambda: self.get_choice(2))
+        self.buttons[2].configure(command=lambda: self.get_choice(3))
+        self.buttons[3].configure(command=lambda: self.get_choice(4))
+        self.buttons[4].configure(command=lambda: self.get_choice(5))
+        self.buttons[5].configure(command=lambda: self.get_choice(6))
 
-        self.btn_br = ttk.Button(self.root, style="TButton", command=lambda: self.get_choice(6))
-        self.btn_br.grid(column=1, row=7)
-
-    def display_menu(self):
-        self.menu_level = 0
-        self.btn_tl.configure(text="Melee")
-        self.btn_tr.configure(text="Magic")
-        self.btn_l.configure(text="Items")
-        self.btn_r.configure(text="")
-        self.btn_bl.configure(text="")
-        self.btn_br.configure(text="")
-
-    def display_magic(self):
-        self.menu_level = 1
-        self.btn_tl.configure(text="Go back")
-        self.btn_tr.configure(text="Fire")
-        self.btn_l.configure(text="Ice")
-        self.btn_r.configure(text="Quake")
-        self.btn_bl.configure(text="Lighting")
-        self.btn_br.configure(text="Heal")
-
-    def display_items(self):
-        self.menu_level = 2
-        self.btn_tl.configure(text="Go back")
-        self.btn_tr.configure(text="Potion (x" + str(self.game.player.items[0]["quantity"]) + ")")
-        self.btn_l.configure(text="Hi-Potion (x" + str(self.game.player.items[1]["quantity"]) + ")")
-        self.btn_r.configure(text="elixir (x" + str(self.game.player.items[2]["quantity"]) + ")")
-        self.btn_bl.configure(text="Splash elixir (x" + str(self.game.player.items[3]["quantity"]) + ")")
-        self.btn_br.configure(text="Bomb (x" + str(self.game.player.items[4]["quantity"]) + ")")
+    def update_btns(self, labels, menu_level):
+        self.menu_level = menu_level
+        for i in range(len(self.buttons)):
+            self.buttons[i].configure(text=labels[i])
 
     def get_choice(self, i):
         if self.running:
@@ -97,22 +77,21 @@ class Interface:
 
     def choose_action(self):
         if self.player_choice == 1:
-            dmg = self.game.player.generate_damage()
-            self.game.enemy.take_damage(dmg)
-            self.player_attack_anim()
-            self.update_health(self.game.enemy)
-            self.check_health(self.game.enemy)
-            self.enemy_attack()
+            self.attack(self.game.player, self.game.enemy)
         elif self.player_choice == 2:
-            self.display_magic()
+            self.update_btns(["Go Back", "Fire", "Ice", "Quake", "Lightning", "Heal"], 1)
         elif self.player_choice == 3:
-            self.display_items()
+            self.update_btns(["Go Back", "Potion (x" + str(self.game.get_item_quantity(0)) + ")",
+                              "Hi-Potion (x" + str(self.game.get_item_quantity(1)) + ")",
+                              "elixir (x" + str(self.game.get_item_quantity(2)) + ")",
+                              "Splash elixir (x" + str(self.game.get_item_quantity(3)) + ")",
+                              "Bomb (x" + str(self.game.get_item_quantity(4)) + ")"], 2)
 
     def choose_magic(self):
         magic_dmg = 0
 
         if self.player_choice == 1:
-            self.display_menu()
+            self.update_btns(self.menu, 0)
             return
         elif self.player_choice == 6:
             self.game.player.heal(self.game.heal.dmg)
@@ -120,134 +99,123 @@ class Interface:
         else:
             magic_dmg = self.game.player.magic[self.player_choice - 2].generate_spell_damage()
             spell_cost = self.game.player.magic[self.player_choice - 2].cost
-            name = self.game.player.magic[self.player_choice - 2].name
-            self.magic_animation(name)
+            self.magic_animation(self.game.player.magic[self.player_choice - 2])
 
         self.game.player.reduce_mp(spell_cost)
-        self.update_mp()
         self.game.enemy.take_damage(magic_dmg)
-        self.update_health(self.game.enemy)
+        self.update_stats()
 
-        self.check_health(self.game.enemy)
-        self.enemy_attack()
+        self.check_health()
+        self.attack(self.game.enemy, self.game.player)
 
     def choose_item(self):
         if self.player_choice == 1:
-            self.display_menu()
+            self.update_btns(self.menu, 0)
             return
-        else:
-            item = self.game.player.items[self.player_choice - 2]["item"]
-            if self.game.player.items[self.player_choice - 2]["quantity"] > 0:
-                dmg = item.prop
-                if item.form == "potion":
-                    self.game.player.heal(dmg)
-                    print(self.game.player.get_hp())
-                elif item.form == "elixir":
-                    self.game.player.mp += dmg
-                    print(self.game.player.get_mp())
-                elif item.form == "attack":
-                    self.game.enemy.take_damage(dmg)
-                    self.update_health(self.game.enemy)
-                    self.check_health(self.game.enemy)
 
-                self.game.player.items[self.player_choice - 2]["quantity"] -= 1
-            else:
-                pass
+        item = self.game.player.items[self.player_choice - 2]["item"]
+        if self.game.player.items[self.player_choice - 2]["quantity"] > 0:
+            dmg = item.prop
+            if item.form == "potion":
+                self.game.player.heal(dmg)
+            elif item.form == "elixir":
+                self.game.player.mp += dmg
+            elif item.form == "attack":
+                self.game.enemy.take_damage(dmg)
 
-        self.enemy_attack()
+            self.update_stats()
+            self.check_health()
+            self.game.player.items[self.player_choice - 2]["quantity"] -= 1
+            self.buttons[self.player_choice - 1].configure(
+                text=item.name + "(x" + str(self.game.get_item_quantity(self.player_choice - 2)) + ")")
 
-    def enemy_attack(self):
-        if self.game.enemy.get_hp() > 0:
-            enemy_dmg = self.game.enemy.generate_damage()
-            self.enemy_attack_anim()
-            self.game.player.take_damage(enemy_dmg)
-            self.update_health(self.game.player)
-            self.check_health(self.game.player)
-        else:
-            pass
+        self.attack(self.game.enemy, self.game.player)
 
-    def update_health(self, character):
-        hp = character.get_hp()
-        max_hp = character.get_max_hp()
-        if character == self.game.player:
-            self.health['value'] = hp
-            self.health_lbl.configure(text="Player HP:" + str(hp) + "/" + str(max_hp))
-            self.health.update()
-        else:
-            self.enemy_health['value'] = hp / 2.5  # this makes the enemy hp(250) equal to 100% of the progress bar
-            self.enemy_health_lbl.configure(text="Enemy HP:" + str(hp) + "/" + str(max_hp))
-            self.enemy_health.update()
+    def attack(self, src, target):
+        if src == target:
+            return
 
-    def update_mp(self):
-        mp = self.game.player.get_mp()
-        max_mp = self.game.player.get_max_mp()
+        if src.get_hp() > 0:
+            dmg = src.generate_damage()
+            self.melee_anim(src)
+            target.take_damage(dmg)
+            self.update_stats()
+            self.check_health()
 
-        self.magic_points['value'] = mp
-        self.mp_lbl.configure(text="Player MP:" + str(mp) + "/" + str(max_mp))
+            if src.get_team() == "good":
+                if target.get_hp() > 0:
+                    self.attack(target, src)
 
-    def player_attack_anim(self):
+    def update_stats(self):
+        for player in self.game.entities:
+            hp = player.get_hp()
+            max_hp = player.get_max_hp()
+            mp = player.get_mp()
+            max_mp = player.get_max_mp()
+
+            if player in self.entity_hp_lbls:
+                self.entity_hp_lbls[player].configure(text="Player HP:" + str(hp) + "/" + str(max_hp))
+                self.entity_hp_bars[player]['value'] = hp / (max_hp / 100)
+                self.entity_hp_bars[player].update()
+
+            if player in self.entity_mp_lbls:
+                self.entity_mp_lbls[player].configure(text="MP:" + str(mp) + "/" + str(max_mp))
+                self.entity_mp_bars[player]['value'] = mp / (max_mp / 100)
+                self.entity_mp_bars[player].update()
+
+    def check_health(self):
+        for character in self.game.entities:
+            hp = character.get_hp()
+            if hp <= 0:
+                if character.get_team() == "evil":
+                    img = self.win_pic
+                    dead = self.boss
+                else:
+                    img = self.lose_pic
+                    dead = self.sprite
+
+                self.running = False
+                self.canvas.create_image(200, 100, image=img, anchor=tk.NW)
+                self.canvas.delete(dead)
+                self.canvas.update()
+                break
+
+    def melee_anim(self, character):
+        movement = 450
+        if character.get_team() == "evil":
+            movement = -450
+
+        graphic = self.entity_graphics[character]
         if not self.animation_progress:
+            sleep(0.1)
             self.animation_progress = True
-            self.canvas.move(self.sprite, 450, 0)
+            self.canvas.move(graphic, movement, 0)
             self.canvas.update()
             sleep(0.3)
-            self.canvas.move(self.sprite, -450, 0)
+            self.canvas.move(graphic, -movement, 0)
             self.canvas.update()
             self.animation_progress = False
-        else:
-            pass
 
-    def enemy_attack_anim(self):
-        if not self.animation_progress:
-            sleep(1)
-            self.canvas.move(self.boss, -450, 0)
+    def magic_animation(self, spell):
+        start = 225
+        end = 675
+        speed = 30
+
+        pic = spell.get_graphic()
+        img = tk.PhotoImage(file=self.game.dir + "anim_default.png")
+        if pic:
+            img = tk.PhotoImage(file=self.game.dir + pic)
+
+        animation = self.canvas.create_image(start, 215, image=img, anchor=tk.NW)
+
+        while start <= end:
             self.canvas.update()
-            sleep(0.3)
-            self.canvas.move(self.boss, 450, 0)
-            self.canvas.update()
-        else:
-            pass
-
-    def check_health(self, character):
-        hp = character.get_hp()
-        if character == self.game.enemy:
-            if hp == 0:
-                self.canvas.create_image(200, 100, image=self.win_pic, anchor=tk.NW)
-                self.running = False
-                self.canvas.delete(self.boss)
-        elif character == self.game.player:
-            if hp == 0:
-                self.canvas.create_image(200, 100, image=self.lose_pic, anchor=tk.NW)
-                self.running = False
-                self.canvas.delete(self.sprite)
-
-    def magic_animation(self, name):
-        x1 = 225
-        x2 = 675
-        spell = self.canvas.create_rectangle(x1, 215, x1 + 15, 235, fill="red")
-        if name == "Fire":
-            spell = self.canvas.create_image(x1, 215, image=self.fire_pic, anchor=tk.NW)
-        elif name == "Ice":
-            # insert ice picture
-            pass
-        elif name == "Lightning":
-            spell = self.canvas.create_image(x1, 215, image=self.lightning_pic, anchor=tk.NW)
-        elif name == "Quake":
-            # insert quake animation
-            pass
-        self.canvas.update()
-        sleep(0.1)
-        while x1 <= x2:
-            if x1 == x2:
-                self.canvas.delete(spell)
-            else:
-                self.canvas.move(spell, 30, 0)
-                self.canvas.update()
-                sleep(0.05)
-            x1 += 30
+            self.canvas.move(animation, speed, 0)
+            sleep(0.05)
+            start += speed
+        self.canvas.delete(animation)
 
     def run(self):
-
         self.root.geometry("805x650")
         self.root.title("Dungeon Quest")
         self.root.configure(bg="darkgrey")
@@ -268,28 +236,18 @@ class Interface:
                        foreground=[('active', 'white')],
                        background=[('active', "#021A44")])
 
-        # region "canvas + buttons"
-
         self.canvas.grid(column=0, row=0, columnspan=2)
-
-        self.canvas.create_image(2, 0, image=self.background, anchor=tk.NW)
-
-        self.sprite = self.canvas.create_image(100, 175, image=self.sprite_pic, anchor=tk.NW)
-        self.boss = self.canvas.create_image(600, 100, image=self.boss_pic, anchor=tk.NW)
 
         self.health['value'] = 100
         self.health.grid(column=0, row=2, sticky=tk.W)
-
         self.health_lbl.grid(column=0, row=1, sticky=tk.W)
 
         self.magic_points['value'] = 100
         self.magic_points.grid(column=0, row=4, sticky=tk.W)
-
         self.mp_lbl.grid(column=0, row=3, sticky=tk.W)
 
         self.enemy_health['value'] = 250
         self.enemy_health.grid(column=1, row=2, sticky=tk.E)
-
         self.enemy_health_lbl.grid(column=1, row=1, sticky=tk.E)
 
         self.root.mainloop()

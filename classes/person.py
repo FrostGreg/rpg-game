@@ -3,7 +3,7 @@ from .colours import Colours
 
 
 class Person:
-    def __init__(self, hp, mp, atk, df, magic, items, graphic=None):
+    def __init__(self, hp, mp, atk, df, magic, items, team, graphic=None):
         self.max_hp = hp
         self.hp = hp
         self.max_mp = mp
@@ -15,6 +15,7 @@ class Person:
         self.items = items
         self.action = ["Attack", "Magic", "Items"]
         self.graphic = graphic
+        self.team = team
 
     def generate_damage(self):
         return random.randrange(self.atk_low, self.atk_high)
@@ -45,6 +46,12 @@ class Person:
 
     def reduce_mp(self, cost):
         self.mp -= cost
+
+    def get_graphic(self):
+        return self.graphic
+
+    def get_team(self):
+        return self.team
 
     def get_action_name(self, i):
         return self.action[i]
