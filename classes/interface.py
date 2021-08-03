@@ -120,6 +120,8 @@ class Interface:
                 self.game.player.heal(dmg)
             elif item.form == "elixir":
                 self.game.player.mp += dmg
+                if self.game.player.mp > self.game.player.get_max_mp():
+                    self.game.player.mp = self.game.player.get_max_mp()
             elif item.form == "attack":
                 self.game.enemy.take_damage(dmg)
 

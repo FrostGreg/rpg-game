@@ -19,8 +19,8 @@ class Game:
         # Create Items
         self.potion = Item("Potion", "potion", "Heals 50 HP", 50)
         self.hipotion = Item("Hi-Potion", "potion", "Heals 100 HP", 100)
-        self.elixir = Item("elixir", "elixir", "Fully restores MP", 9999)
-        self.splashelixir = Item("Splash elixir", "elixir", "Fully restores MP for all party members", 9999)
+        self.elixir = Item("elixir", "elixir", "Fully restores MP", 250)
+        self.splashelixir = Item("Splash elixir", "elixir", "Fully restores MP for all party members", 250)
 
         self.bomb = Item("Bomb", "attack", "Deals 250 damage to all enemies", 250)
 
